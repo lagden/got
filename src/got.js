@@ -40,9 +40,9 @@ function _abort(name) {
  *
  * @async
  * @param {object} args - The request arguments.
- * @param {string} [args.name] - The name of the request (for managing multiple requests).
  * @param {string} args.endpoint - The URL endpoint to send the request to.
- * @param {object} args.options - The options to configure the request (e.g., method, headers, body).
+ * @param {string} [args.name] - The name of the request (for managing multiple requests).
+ * @param {object} [args.options] - The options to configure the request (e.g., method, headers, body).
  * @param {boolean} [args.onlyResponse=false] - Flag indicating whether to return the full response or only the JSON body.
  * @param {boolean} [args.ignoreAbort=false] - Flag indicating whether to ignore aborting the request.
  * @returns {Promise<Response|object>} A Promise that resolves to the response object or the parsed JSON body.
@@ -50,9 +50,9 @@ function _abort(name) {
  */
 export async function got(args = {}) {
 	const {
-		name,
 		endpoint,
-		options,
+		name = 'tadashi_got',
+		options = {},
 		onlyResponse = false,
 		ignoreAbort = false,
 	} = args
@@ -136,11 +136,12 @@ export async function gql(args = {}) {
  * Executes a REST API request using the `got` function with the provided arguments.
  *
  * @async
- * @param {object} args - The REST request arguments.
- * @param {object} args.data - The request data to be sent in the body (for non-GET/HEAD requests).
+ * @param {object} [args] - The REST request arguments.
+ * @param {object} [args.data] - The request data to be sent in the body (for non-GET/HEAD requests).
  * @param {string} args.endpoint - The URL endpoint for the REST API.
  * @param {string} args.name - The name of the request (for managing multiple requests).
  * @param {boolean} [args.onlyResponse=false] - Flag indicating whether to return the full response or only the JSON body.
+ * @param {boolean} [args.json=true] - Flag indicating whether to include 'Content-Type: application/json' header.
  * @param {object} [args.options] - Additional options to configure the request.
  * @returns {Promise<Response|object>} A Promise that resolves to the response object or the parsed JSON body.
  * @throws {ResponseError} If the response status is not OK (2xx).
@@ -151,15 +152,20 @@ export async function rest(args = {}) {
 		endpoint,
 		name,
 		onlyResponse = false,
+		json = true,
 		options = {},
 	} = args
 
 	const _options = {
-		headers: {
-			'Content-Type': 'application/json',
-		},
 		...optionsDefault,
 		...options,
+	}
+
+	if (json) {
+		_options.headers = {
+			..._options.headers,
+			'Content-Type': 'application/json',
+		}
 	}
 
 	const isHeadOrGet = mapHeadGet.has(String(_options.method).toLowerCase())

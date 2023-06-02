@@ -20,7 +20,7 @@ test.after(t => {
 
 test('got function - should return response object', async t => {
 	const response = await got({
-		name: 'requestName',
+		name: 'gotName',
 		endpoint: t.context.http,
 		options: {
 			method: 'GET',
@@ -36,7 +36,7 @@ test('got function - should return response object', async t => {
 test('got function - should throw ResponseError', async t => {
 	const error = await t.throwsAsync(async () => {
 		await got({
-			name: 'requestName',
+			name: 'gotError',
 			endpoint: `${t.context.http}/status/500`,
 			options: {
 				method: 'GET',
@@ -83,4 +83,26 @@ test('rest function - should abort the first request', async t => {
 	]
 	const results = await Promise.allSettled(promises)
 	t.is(typeof results, 'object')
+})
+
+test('rest function - no data - should return response object', async t => {
+	const response = await rest({
+		endpoint: 'https://registry.npmjs.org/@tadashi/got/latest',
+		name: 'restRequestNoData',
+		json: false,
+		options: {
+			method: 'GET',
+			credentials: 'omit',
+		},
+	})
+
+	t.is(typeof response, 'object')
+})
+
+test('rest got - simple - should return response object', async t => {
+	const response = await got({
+		endpoint: 'https://registry.npmjs.org/@tadashi/got/latest',
+	})
+
+	t.is(typeof response, 'object')
 })

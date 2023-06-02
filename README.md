@@ -35,9 +35,11 @@ See more examples here: https://codepen.io/lagden/pen/BaqXJPN?editors=0010
 
 ```html
 <script type="module">
-  import {gql} from 'https://unpkg.com/@tadashi/got@{version}/src/got.js'
+  import {got} from 'https://unpkg.com/@tadashi/got@{version}/src/got.js'
 
-  const response = await rest('https://registry.npmjs.org/@tadashi/got/latest', {options: {method: 'GET'}})
+  const response = await got({
+    endpoint: 'https://registry.npmjs.org/@tadashi/got/latest',
+  })
 </script>
 ```
 

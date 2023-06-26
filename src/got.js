@@ -1,10 +1,20 @@
 import ResponseError from './lib/response-error.js'
 
+/**
+ * Set of HTTP methods that are considered as HEAD or GET requests.
+ * @type {Set<string>}
+ */
 const mapHeadGet = new Set(['get', 'head'])
+
+/**
+ * Map containing the AbortControllers for ongoing requests.
+ * @type {Map<string, AbortController>}
+ */
 const controllers = new Map()
 
 /**
- * @type {globalThis.Request}
+ * Default options for fetch requests.
+ * @type {Object}
  */
 const optionsDefault = {
 	method: 'POST',
@@ -15,11 +25,9 @@ const optionsDefault = {
 }
 
 /**
- * Aborts a controller and removes it from the controllers map if it exists.
- * Creates and adds a new controller to the controllers map if a name is provided.
- *
- * @param {string} [name] - The name of the controller to abort and add.
- * @returns {AbortController|undefined} The aborted controller if it exists, or the newly created controller.
+ * Abort the ongoing request with the given name.
+ * @param {string} name - The name of the request.
+ * @returns {AbortController} - The created AbortController instance.
  */
 function _abort(name) {
 	if (name && controllers.has(name)) {
@@ -36,29 +44,26 @@ function _abort(name) {
 }
 
 /**
- * Executes an asynchronous HTTP request using the global `fetch` function.
- *
- * @async
- * @param {object} args - The request arguments.
+ * Performs a fetch request.
+ * @param {Object} args - The arguments for the fetch request.
  * @param {string} args.endpoint - The URL endpoint to send the request to.
- * @param {string} [args.name] - The name of the request (for managing multiple requests).
- * @param {object} [args.options] - The options to configure the request (e.g., method, headers, body).
- * @param {boolean} [args.onlyResponse=false] - Flag indicating whether to return the full response or only the JSON body.
- * @param {boolean} [args.ignoreAbort=false] - Flag indicating whether to ignore aborting the request.
- * @returns {Promise<Response|object>} A Promise that resolves to the response object or the parsed JSON body.
- * @throws {ResponseError} If the response status is not OK (2xx).
+ * @param {string} [args.name] - The name of the request.
+ * @param {Object} [args.options] - Additional options for the fetch request.
+ * @param {boolean} [args.onlyResponse=false] - Flag indicating whether to return only the response object.
+ * @param {boolean} [args.ignoreAbort=false] - Flag indicating whether to ignore aborting duplicate requests.
+ * @returns {Promise<any>} - A promise that resolves to the response data or the response object.
  */
-export async function got(args = {}) {
+export async function got(args) {
 	const {
 		endpoint,
-		name = 'tadashi_got',
+		name,
 		options = {},
 		onlyResponse = false,
 		ignoreAbort = false,
 	} = args
 
 	let controller
-	if (ignoreAbort === false) {
+	if (ignoreAbort === false || name === undefined) {
 		// Avoid multiple requests
 		controller = _abort(name)
 
@@ -96,20 +101,18 @@ export async function got(args = {}) {
 }
 
 /**
- * Executes a GraphQL query using the `got` function with the provided arguments.
- *
- * @async
- * @param {object} args - The GraphQL request arguments.
- * @param {string} args.source - The GraphQL query or mutation string.
- * @param {object} [args.variableValues] - The variable values to be used in the query.
- * @param {string} [args.operationName] - The name of the operation in the query.
- * @param {string} args.endpoint - The URL endpoint for the GraphQL server.
- * @param {string} args.name - The name of the request (for managing multiple requests).
- * @param {object} [args.options] - Additional options to configure the request.
- * @returns {Promise<Response|object>} A Promise that resolves to the response object or the parsed JSON body.
+ * Performs a GraphQL request using the `got` function.
+ * @param {Object} args - The arguments for the GraphQL request.
+ * @param {string} args.source - The GraphQL query/mutation.
+ * @param {Object} [args.variableValues] - The variable values for the GraphQL request.
+ * @param {string} [args.operationName] - The operation name for the GraphQL request.
+ * @param {string} args.endpoint - The URL endpoint to send the request to.
+ * @param {string} [args.name] - The name of the request.
+ * @param {Object} [args.options] - Additional options for the fetch request.
+ * @returns {Promise<any>} - A promise that resolves to the response data.
  * @throws {ResponseError} If the response status is not OK (2xx).
  */
-export async function gql(args = {}) {
+export async function gql(args) {
 	const {
 		source,
 		variableValues,
@@ -133,20 +136,18 @@ export async function gql(args = {}) {
 }
 
 /**
- * Executes a REST API request using the `got` function with the provided arguments.
- *
- * @async
- * @param {object} [args] - The REST request arguments.
- * @param {object} [args.data] - The request data to be sent in the body (for non-GET/HEAD requests).
- * @param {string} args.endpoint - The URL endpoint for the REST API.
- * @param {string} args.name - The name of the request (for managing multiple requests).
- * @param {boolean} [args.onlyResponse=false] - Flag indicating whether to return the full response or only the JSON body.
- * @param {boolean} [args.json=true] - Flag indicating whether to include 'Content-Type: application/json' header.
- * @param {object} [args.options] - Additional options to configure the request.
- * @returns {Promise<Response|object>} A Promise that resolves to the response object or the parsed JSON body.
+ * Performs a RESTful request using the `got` function.
+ * @param {Object} args - The arguments for the RESTful request.
+ * @param {any} args.data - The data to send in the request body.
+ * @param {string} args.endpoint - The URL endpoint to send the request to.
+ * @param {string} [args.name] - The name of the request.
+ * @param {boolean} [args.onlyResponse=false] - Flag indicating whether to return only the response object.
+ * @param {boolean} [args.json=true] - Flag indicating whether to set the 'Content-Type' header to 'application/json'.
+ * @param {Object} [args.options] - Additional options for the fetch request.
+ * @returns {Promise<any>} - A promise that resolves to the response data or the response object.
  * @throws {ResponseError} If the response status is not OK (2xx).
  */
-export async function rest(args = {}) {
+export async function rest(args) {
 	const {
 		data,
 		endpoint,

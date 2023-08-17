@@ -20,6 +20,18 @@ app
 				.end(JSON.stringify({status: error.statusCode, error: 'Invalid JSON or no data at all!'}))
 		})
 	})
+	.post('/redirect', res => {
+		res
+			.writeStatus('301 Moved Permanently')
+			.writeHeader('Location', '/data')
+			.end()
+	})
+	.post('/redirect-loop', res => {
+		res
+			.writeStatus('301 Moved Permanently')
+			.writeHeader('Location', '/redirect-loop')
+			.end()
+	})
 	.get('/json', res => {
 		res
 			.writeHeader('Content-Type', 'application/json')

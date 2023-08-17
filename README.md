@@ -3,7 +3,6 @@
 [![NPM version][npm-img]][npm]
 [![Build Status][ci-img]][ci]
 [![Coverage Status][coveralls-img]][coveralls]
-[![XO code style][xo-img]][xo]
 
 
 [npm-img]:         https://img.shields.io/npm/v/@tadashi/got.svg
@@ -12,8 +11,6 @@
 [ci]:              https://github.com/lagden/got/actions/workflows/nodejs.yml
 [coveralls-img]:   https://coveralls.io/repos/github/lagden/got/badge.svg?branch=main
 [coveralls]:       https://coveralls.io/github/lagden/got?branch=main
-[xo-img]:          https://img.shields.io/badge/code_style-XO-5ed9c7.svg
-[xo]:              https://github.com/sindresorhus/xo
 
 
 ---

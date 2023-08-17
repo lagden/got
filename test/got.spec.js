@@ -106,3 +106,36 @@ test('rest got - simple - should return response object', async t => {
 
 	t.is(typeof response, 'object')
 })
+
+test('redirect post', async t => {
+	const response = await rest({
+		data: {value: '30030030030'},
+		endpoint: `${t.context.http}/redirect`,
+		name: 'restRedirect',
+		options: {
+			method: 'POST',
+		},
+	})
+
+	t.is(response.data.value, '30030030030')
+	t.is(typeof response, 'object')
+})
+
+test('redirect post loop - should throw ResponseError', async t => {
+	const error = await t.throwsAsync(async () => {
+		await got({
+			name: 'gotLoopError',
+			endpoint: `${t.context.http}/redirect-loop`,
+			options: {
+				method: 'POST',
+			},
+			ignoreAbort: true,
+			onlyResponse: true,
+			maxRedirects: 1,
+		})
+	})
+
+	t.is(error.name, 'ResponseError')
+	t.is(error.message, 'ERR_TOO_MANY_REDIRECTS')
+	t.is(error.status, 429)
+})

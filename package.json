@@ -1,6 +1,6 @@
 {
   "name": "@tadashi/got",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Request library",
   "type": "module",
   "main": "./src/got.js",
@@ -18,7 +18,7 @@
     "README.md"
   ],
   "scripts": {
-    "eslint": "eslint --config .eslintrc.yml --ext .js --ignore-path .gitignore .",
+    "eslint": "eslint --ignore-path .gitignore .",
     "pretest": "npm run eslint",
     "test": "c8 --reporter=text --reporter=lcov ava"
   },
@@ -34,11 +34,10 @@
   },
   "devDependencies": {
     "@tadashi/hex-id": "2.0.0",
-    "ava": "5.3.0",
-    "c8": "7.14.0",
-    "eslint": "8.41.0",
-    "eslint-config-xo": "0.43.1",
-    "eslint-plugin-unicorn": "47.0.0",
+    "ava": "5.3.1",
+    "c8": "8.0.1",
+    "eslint": "8.47.0",
+    "eslint-plugin-unicorn": "48.0.1",
     "hash-to-port": "1.2.0",
     "http-errors": "2.0.0",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/v20.30.0.tar.gz"

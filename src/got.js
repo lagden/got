@@ -1,20 +1,26 @@
 import ResponseError from './lib/response-error.js'
 
 /**
- * Set of HTTP methods that are considered as HEAD or GET requests.
+ * Set of HTTP methods that correspond to HEAD or GET requests.
  * @type {Set<string>}
  */
 const mapHeadGet = new Set(['get', 'head'])
 
 /**
- * Map containing the AbortControllers for ongoing requests.
+ * A map to store the number of redirects for each request name.
+ * @type {Map<string, number>}
+ */
+const redirects = new Map()
+
+/**
+ * A map to store AbortControllers for ongoing requests.
  * @type {Map<string, AbortController>}
  */
 const controllers = new Map()
 
 /**
  * Default options for fetch requests.
- * @type {Object}
+ * @type {RequestInit}
  */
 const optionsDefault = {
 	method: 'POST',
@@ -25,9 +31,9 @@ const optionsDefault = {
 }
 
 /**
- * Abort the ongoing request with the given name.
- * @param {string} name - The name of the request.
- * @returns {AbortController} - The created AbortController instance.
+ * Abort a request by its name or create an AbortController for a new request.
+ * @param {string} [name] - The name associated with the request.
+ * @returns {AbortController|undefined} The AbortController for the new request.
  */
 function _abort(name) {
 	if (name && controllers.has(name)) {
@@ -44,23 +50,33 @@ function _abort(name) {
 }
 
 /**
- * Performs a fetch request.
+ * Perform a fetch request with advanced options.
+ * @async
  * @param {Object} args - The arguments for the fetch request.
- * @param {string} args.endpoint - The URL endpoint to send the request to.
- * @param {string} [args.name] - The name of the request.
- * @param {Object} [args.options] - Additional options for the fetch request.
- * @param {boolean} [args.onlyResponse=false] - Flag indicating whether to return only the response object.
- * @param {boolean} [args.ignoreAbort=false] - Flag indicating whether to ignore aborting duplicate requests.
- * @returns {Promise<any>} - A promise that resolves to the response data or the response object.
+ * @param {string} args.endpoint - The URL to make the request to.
+ * @param {number} [args.maxRedirects=5] - Maximum number of allowed redirects.
+ * @param {string} [args.name] - The name associated with the request.
+ * @param {boolean} [args.ignoreAbort=false] - If true, allows multiple requests with the same name.
+ * @param {boolean} [args.onlyResponse=false] - If true, only the response object is returned.
+ * @param {Object} [args.options] - Additional fetch options.
+ * @returns {Promise<Response|Object>} The response or parsed JSON of the response.
  */
 export async function got(args) {
 	const {
 		endpoint,
+		maxRedirects = 5,
 		name,
-		options = {},
-		onlyResponse = false,
 		ignoreAbort = false,
+		onlyResponse = false,
+		options = {},
 	} = args
+
+	let cc = 0
+	if (redirects.has(name)) {
+		cc = redirects.get(name)
+	} else {
+		redirects.set(name, cc)
+	}
 
 	let controller
 	if (ignoreAbort === false || name === undefined) {
@@ -78,6 +94,18 @@ export async function got(args) {
 
 	try {
 		const response = await globalThis.fetch(request)
+
+		if (/post/i.test(options.method) && response.redirected) {
+			if (cc >= maxRedirects) {
+				throw new ResponseError('ERR_TOO_MANY_REDIRECTS', 429)
+			}
+
+			redirects.set(name, cc + 1)
+			return got({
+				...args,
+				endpoint: response.url,
+			})
+		}
 
 		if (!response.ok) {
 			const _error = new ResponseError(response.statusText, response.status)
@@ -97,28 +125,34 @@ export async function got(args) {
 			controllers.delete(name)
 		}
 		controller = undefined
+
+		if (redirects.has(name)) {
+			redirects.delete(name)
+		}
 	}
 }
 
 /**
- * Performs a GraphQL request using the `got` function.
+ * Perform a GraphQL request using the 'got' function with JSON body.
+ * @async
  * @param {Object} args - The arguments for the GraphQL request.
+ * @param {string} args.endpoint - The URL of the GraphQL endpoint.
+ * @param {number} [args.maxRedirects=5] - Maximum number of allowed redirects.
+ * @param {string} [args.name] - The name associated with the request.
+ * @param {string} [args.operationName] - Name of the operation to be executed.
  * @param {string} args.source - The GraphQL query/mutation.
- * @param {Object} [args.variableValues] - The variable values for the GraphQL request.
- * @param {string} [args.operationName] - The operation name for the GraphQL request.
- * @param {string} args.endpoint - The URL endpoint to send the request to.
- * @param {string} [args.name] - The name of the request.
- * @param {Object} [args.options] - Additional options for the fetch request.
- * @returns {Promise<any>} - A promise that resolves to the response data.
- * @throws {ResponseError} If the response status is not OK (2xx).
+ * @param {Object} [args.variableValues] - Variables to be passed with the query/mutation.
+ * @param {Object} [args.options] - Additional fetch options.
+ * @returns {Promise<Response|Object>} The response or parsed JSON of the response.
  */
 export async function gql(args) {
 	const {
+		endpoint,
+		maxRedirects = 5,
+		name,
+		operationName,
 		source,
 		variableValues,
-		operationName,
-		endpoint,
-		name,
 		options = {},
 	} = args
 
@@ -132,28 +166,35 @@ export async function gql(args) {
 
 	_options.body = _options?.body ?? JSON.stringify({source, variableValues, operationName})
 
-	return got({name, endpoint, options: _options})
+	return got({
+		endpoint,
+		maxRedirects,
+		name,
+		options: _options,
+	})
 }
 
 /**
- * Performs a RESTful request using the `got` function.
+ * Perform a RESTful request using the 'got' function with optional JSON body.
+ * @async
  * @param {Object} args - The arguments for the RESTful request.
- * @param {any} args.data - The data to send in the request body.
- * @param {string} args.endpoint - The URL endpoint to send the request to.
- * @param {string} [args.name] - The name of the request.
- * @param {boolean} [args.onlyResponse=false] - Flag indicating whether to return only the response object.
- * @param {boolean} [args.json=true] - Flag indicating whether to set the 'Content-Type' header to 'application/json'.
- * @param {Object} [args.options] - Additional options for the fetch request.
- * @returns {Promise<any>} - A promise that resolves to the response data or the response object.
- * @throws {ResponseError} If the response status is not OK (2xx).
+ * @param {Object} args.data - The data to be sent in the request body (if applicable).
+ * @param {string} args.endpoint - The URL to make the request to.
+ * @param {boolean} [args.json=true] - If true, sets 'Content-Type' header to 'application/json'.
+ * @param {number} [args.maxRedirects=5] - Maximum number of allowed redirects.
+ * @param {string} [args.name] - The name associated with the request.
+ * @param {boolean} [args.onlyResponse=false] - If true, only the response object is returned.
+ * @param {Object} [args.options] - Additional fetch options.
+ * @returns {Promise<Response|Object>} The response or parsed JSON of the response.
  */
 export async function rest(args) {
 	const {
 		data,
 		endpoint,
 		name,
-		onlyResponse = false,
 		json = true,
+		maxRedirects = 5,
+		onlyResponse = false,
 		options = {},
 	} = args
 
@@ -177,5 +218,11 @@ export async function rest(args) {
 		_options.body = _options?.body ?? JSON.stringify(data)
 	}
 
-	return got({name, endpoint, options: _options, onlyResponse})
+	return got({
+		endpoint,
+		maxRedirects,
+		name,
+		onlyResponse,
+		options: _options,
+	})
 }

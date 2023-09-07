@@ -1,6 +1,6 @@
 {
   "name": "@tadashi/got",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Request library",
   "type": "module",
   "main": "./src/got.js",

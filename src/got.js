@@ -108,17 +108,25 @@ export async function got(args) {
 		}
 
 		if (!response.ok) {
+			const chunks = []
+
 			const reader = response.body.getReader()
-			const chunk = []
-			for (;;) {
+			const pump = async () => {
 				const {done, value} = await reader.read()
 				if (done) {
-					break
+					return
 				}
-				chunk.push(new TextDecoder().decode(value))
+				chunks.push(new TextDecoder().decode(value))
+				return pump()
 			}
+			await pump()
 
-			const allbody = chunk.join('')
+			// // Replace the above code with this one soon (113-122)
+			// for await (const chunk of response.body) {
+			// 	chunks.push(new TextDecoder().decode(chunk))
+			// }
+
+			const allbody = chunks.join('')
 			let body
 			try {
 				body = JSON.parse(allbody)

@@ -139,3 +139,22 @@ test('redirect post loop - should throw ResponseError', async t => {
 	t.is(error.message, 'ERR_TOO_MANY_REDIRECTS')
 	t.is(error.status, 429)
 })
+
+test('rest function - should return response text', async t => {
+	const error = await t.throwsAsync(async () => {
+		await got({
+			name: 'gotError',
+			endpoint: `${t.context.http}/any`,
+			options: {
+				method: 'GET',
+			},
+		})
+	})
+
+	t.is(error.name, 'ResponseError')
+	t.is(error.message, 'Unauthorized')
+	t.is(error.status, 401)
+	t.is(error.statusCode, 401)
+	t.is(error.statusText, 'Unauthorized')
+	t.is(error.body, 'Unauthorized')
+})

@@ -45,6 +45,13 @@ app
 			.writeHeader('Content-Type', 'application/json')
 			.end(JSON.stringify({status: error.statusCode, error: error.message}))
 	})
+	.get('/any', (res, req) => {
+		const error = createError(401)
+		res
+			.writeStatus(`${error.statusCode} ${error.message}`)
+			// .writeHeader('Content-Type', 'application/json')
+			.end( error.message)
+	})
 	.any('/*', res => {
 		res.end('Nothing to see here!')
 	})

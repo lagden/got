@@ -108,11 +108,24 @@ export async function got(args) {
 		}
 
 		if (!response.ok) {
-			const _error = new ResponseError(response.statusText, response.status)
-			if (/application\/json/g.test(response?.headers?.get('content-type'))) {
-				_error.body = await response.json()
+			const reader = response.body.getReader()
+			const chunk = []
+			for (;;) {
+				const {done, value} = await reader.read()
+				if (done) {
+					break
+				}
+				chunk.push(new TextDecoder().decode(value))
 			}
-			throw _error
+
+			const allbody = chunk.join('')
+			let body
+			try {
+				body = JSON.parse(allbody)
+			} catch {
+				body = allbody
+			}
+			throw new ResponseError(response.statusText, response.status, body)
 		}
 
 		if (onlyResponse) {

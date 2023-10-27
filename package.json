@@ -1,6 +1,6 @@
 {
   "name": "@tadashi/got",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Request library",
   "type": "module",
   "main": "./src/got.js",
@@ -33,10 +33,10 @@
     "node": ">=18"
   },
   "devDependencies": {
-    "@tadashi/hex-id": "2.0.0",
+    "@tadashi/hex-id": "3.0.2",
     "ava": "5.3.1",
     "c8": "8.0.1",
-    "eslint": "8.48.0",
+    "eslint": "8.52.0",
     "eslint-plugin-unicorn": "48.0.1",
     "hash-to-port": "1.2.0",
     "http-errors": "2.0.0",

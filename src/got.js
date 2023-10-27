@@ -209,7 +209,7 @@ export async function gql(args) {
  * @returns {Promise<Response|Object>} The response or parsed JSON of the response.
  */
 export async function rest(args) {
-	const {
+	let {
 		data,
 		endpoint,
 		name,
@@ -235,6 +235,11 @@ export async function rest(args) {
 
 	if (isHeadOrGet) {
 		Reflect.deleteProperty(_options, 'body')
+		const _url = new URL(endpoint)
+		for (const [k, v] of Object.entries(data ?? {})) {
+			_url.searchParams.append(k, v)
+		}
+		endpoint = _url.href
 	} else {
 		_options.body = _options?.body ?? JSON.stringify(data)
 	}

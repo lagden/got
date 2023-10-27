@@ -79,7 +79,7 @@ test('rest function - should return response object', async t => {
 test('rest function - should abort the first request', async t => {
 	const promises = [
 		rest({endpoint: `${t.context.http}/json?a=1`, name: 'restRequestAbort', options: {method: 'GET'}}),
-		rest({endpoint: `${t.context.http}/json?b=1`, name: 'restRequestAbort', options: {method: 'GET'}}),
+		rest({endpoint: `${t.context.http}/json`, data: {b: 1}, name: 'restRequestAbort', options: {method: 'GET'}}),
 	]
 	const results = await Promise.allSettled(promises)
 	t.is(typeof results, 'object')

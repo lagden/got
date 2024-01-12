@@ -173,7 +173,9 @@ export async function gql(args) {
 		name,
 		operationName,
 		source,
+		query,
 		variableValues,
+		variables,
 		options = {},
 	} = args
 
@@ -185,7 +187,7 @@ export async function gql(args) {
 		...options,
 	}
 
-	_options.body = _options?.body ?? JSON.stringify({source, variableValues, operationName})
+	_options.body = _options?.body ?? JSON.stringify({source, query, variableValues, variables, operationName})
 
 	return got({
 		endpoint,
